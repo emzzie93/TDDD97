@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+
+<html> 
+	<head>
+
+		<title>Twidder</title>
+
+		<link rel="stylesheet" type="text/css" href="client.css">
+		<script type="text/javascript" src = "client.js"></script>
+		<script type="text/javascript" src = "serverstub.js"></script>
+
+		<script id="loginView" type=”text/view”>
+			
+			<div id="block">
+	
+				<div id="logo-div">
+					<img id="logo" src="wimage.png" width="338px" height="398px" alt="logo and slogan">
+				</div>
+	
+				<div id="login-box">
+
+					<div id = "top-box">
+						<form id="login" method="POST"  onsubmit="return loginfunc()">
+							<label>E-mail:</label> <input id="username" type="email" name="login_email" required ><br>
+							<label> Password:</label> <input id="password" type="Password" name="login_password" minlength="8" >
+							<input id="login-button" type="submit" name="login" value="login">
+						</form>
+
+						<div id="login_error">
+						</div>
+
+					</div>
+
+					<div id="bottom-box">
+
+						<h3 id="title"> Sign up here </h3>
+
+						<form id="signUpForm" method="POST" onsubmit="return pwcheck()">
+							<label>First name</label> <input id="firstname" type="text" name="Name" required><br>
+							<label>Family name</label> <input id="familyname" type="text" name="Last-name" required ><br>
+							<label>Gender</label> 
+							<select id="gender" name="Gender" >
+								<option value="female"> female </option>	
+								<option value="male"> male </option>
+								<option value="other"> other</option>
+							</select>
+							<label>City</label> <input id="city" type="text" name="City" required>
+							<label>Country</label><input id="country" type="text" name="Country" required>
+							<label>Email</label><input id="email" type="email" name="Email" required>
+							<label>Password</label><input id="Password1" type="Password" name="Password1"  placeholder="atleast 8 characters" minlength="8" required>
+							<label>Repeat PSW</label><input id="Password2" type="Password" name="Password2" minlength="8" required><br>
+							<input id="signUp-button" type="submit" name="signUp" value="signUp" required> 
+						</form>
+
+
+					<div id="signup_error"></div>
+
+
+					</div>
+
+				</div>
+			</div>
+		</script>
+
+		<!-- Profile view -->
+
+		<script id = "profileView" type="text/view">
+
+		<header class="mainheader">
+
+			<nav class="navbar"><ul>
+
+				<li id="HomeTab" class="TabEl active" onclick="showpanel(this, 'Home')"><a href="#HomePage" id = "myid"> Home </a></li>
+				<li id="BrowseTab" class="TabEl" onclick="showpanel(this, 'Browse')"> <a href="#Browse"> Browse </a></li>
+				<li id="AccountTab" class="TabEl" onclick="showpanel(this, 'Account')"><a href="#Account"> Account </a></li>
+
+			</ul></nav>
+
+			</header>
+
+		<dív id="Home" class="content" >
+
+			<div class="centerDiv">
+			<h1>Home Page</h1>
+
+				<h3>New Post</h3>
+				<div class = "postArea">
+					<textarea type="text" id="postText" class="postSettings" placeholder="Post something on your wall!" ></textarea>
+					<input id ="postButton" type="submit" name="postContent" value="Post" onclick="postOnWall('postText','postsDiv', 'me')">
+				</div>
+				<div id="post_error"></div>
+
+				<div id="topDiv">
+					<div id="titleDiv"><h3>My wall</h3></div>
+						<input id="reloadWallBtn" type="submit" name="reload" value="Reload Wall" onclick="reloadWall('postsDiv', 'me')">
+				</div>
+
+
+				<div id="postsDiv">
+
+				</div> <!-- end posts div-->
+			</div>
+
+			<div class="userInfo">
+
+				<h1> User info </h1>
+
+					<div id = "usercontent">
+
+						<!-- added by script -->
+					</div>
+
+
+			</div> <!-- end of user info -->
+
+		</dív> <!--end of home -->
+
+
+
+
+		<div id="Browse" class="content " >
+
+
+			<div id="searchUser" class="mainDiv">
+				<h3> Search </h3>
+				<div id="browse_error"></div>
+				<div><label>Search for user:</label> <input id="serachText" type="textarea" name="searchUser"></div>
+				<input id="searchBtn" type="submit" name="search" value="search" onclick="loadUser()">
+			</div>
+
+		<div id="browsedContent"  class="centerDiv">
+
+				<h3>New Post</h3>
+				<div class= "postArea">
+					<textarea type="text" id="B_Text" class="postSettings" placeholder="Post something on the wall!" ></textarea>
+					<input id ="postButton" type="submit" name="postContent" value="Post" onclick="postOnWall('B_Text','B_postsDiv', 'user')">
+				</div>
+
+				<div id="topDiv">
+					<div id="titleDiv"><h3>My wall</h3></div>
+						<input id="reloadWallBtn" type="submit" name="reload" value="Reload Wall" onclick="reloadWall('B_postsDiv')">
+
+				</div> <!-- end topdiv -->
+
+
+				<div id="B_postsDiv" >
+
+				</div> <!-- end posts div-->
+		</div>
+
+		<div id="B_usrContentDiv" class="userInfo">
+
+			<h1> User info </h1>
+
+				<div id = "Browsedusercontent">
+
+				<!-- added by script -->
+				</div>
+
+
+		</div> <!-- end of user info -->
+
+
+		</div> <!--end of browse-->
+
+
+
+
+		<div id="Account" class="content mainDiv">
+			<h1>Account-settings</h1>
+
+			<div id="pwsettings">
+
+				Change password: <button id="changePW" onclick="showform()">Change password</button>
+
+				<div id="pwform" style="display: none;">
+
+				<form onsubmit="return newPassword()">
+
+					<label>Current password</label><input type="password" name="currpw" id="old" required>
+					<label>New password</label><input type="password" name="newpw1" id="newpw1" required>
+					<label>Repeat new password</label> <input type="password" name="newpw2" id="newpw2" required>
+					<input id="PWbutton" type="submit" name="change" value=change
+					">
+
+				</form>
+
+				<div id="pw_error"></div
+
+				</div> <!-- end of pwform -->
+
+			</div>  <!-- end of pwsettings -->
+
+
+			<button id="logout-button" onclick="logout()">log out</button>
+
+
+		</div> <!-- end of account main DIV -->
+
+
+		</script>
+
+
+	</head>
+
+
+	<body>
+		
+	<div id="currentView"></div>
+
+
+
+	</body>
+
+</html>

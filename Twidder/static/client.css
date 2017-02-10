@@ -1,0 +1,368 @@
+
+
+body{
+
+/* background-color: blue;*/
+background-image: url("http://www.planwallpaper.com/static/images/518169-backgrounds.jpg");
+
+
+}
+
+#block{
+
+	width:600px;
+	height:400px;
+	margin-left:auto;
+	margin-right:auto;
+	position:relative;
+	top:100px;
+
+}
+
+#logo-div{ 
+	height:398px;
+	width:338px;
+	border:1px solid black;
+	float:left;
+	}
+
+#login-box{
+
+	width:248px;
+	height:400px;
+	float:right;
+	
+}
+
+#top-box{
+	background-color: white;
+	width:248px;
+	height:100px;
+	border: 1px solid black;
+	opacity: 0.8;
+}
+
+#bottom-box{
+	background-color: white;
+	width:248px;
+	height:286px;
+	border: 1px solid black;
+	position: absolute;
+	bottom:0px;
+	text-align: center;
+	opacity: 0.8;
+	
+}
+	
+form {
+	padding:10px;
+}
+
+input, select {
+	width:60%;
+	float:right;	
+}
+
+label{
+	padding-top:5px;
+	float:left;
+	clear:left;
+	text-align: right;
+	
+}
+
+#title{
+
+	height: 30px;
+    margin: 2px;
+}
+
+#login_error{
+
+	width: 70%;
+	height: 20px;
+	color: #9C1A1C;
+	float: left;
+	margin-left: 10px;
+	margin-top: 10px;
+}
+
+#signup_error{
+
+	width: 70%;
+	height: 20px;
+	color: #9C1A1C;
+	float: left;
+	margin-left: 10px;
+	margin-top: 10px;
+
+}
+
+#login-button{
+	margin-top:5px;
+	margin-right:6px;
+	padding:5px;
+	float:right;
+	width:40px;
+	height:25px;
+}
+
+#signUp-button{
+		float:right;
+		position: absolute;
+		width:50px;
+		height: 20px;
+		bottom: 10px;
+		right:5px;
+
+}
+
+.mainheader nav{
+
+	background-color: #848484;
+	height: 40px;
+	width:25%;
+	border-radius: 5px;
+	margin: 2% auto;
+}
+
+.mainheader ul{
+
+	list-style: none;
+	margin:0 auto;
+}
+
+.mainheader ul li { 
+
+	float:left;
+	display: inline;
+	margin-left: 10px;
+	font-family: sans-serif;
+	text-shadow: 2px 2px 2px #000;
+
+
+
+}
+
+.mainheader ul li a{
+
+	display: block;
+}
+
+.mainheader nav a:link, .mainheader nav a:visited {
+
+	color: white;
+	display: inline-block;
+	height: 20px;
+	padding: 10px;
+	text-decoration: none;
+	border-radius: 5px;
+}
+
+
+.mainheader nav a:hover, .mainheader nav a:active, .active, .mainheader nav .active a:link, .mainheader nav .active a:visited{
+
+	background-color: red;
+	border-radius: 5px;
+} 
+
+body .mainDiv{
+
+	height: 300px;
+	width: 70%;
+	background-color: #BDBDBD;
+	margin-left: auto;
+	margin-right: auto;
+	position: relative;
+	border: 1px solid black;
+	border-radius: 3px;
+	opacity: 0.8;
+
+}
+
+
+#Browse, #Account, #browsedContent, #B_usrContentDiv{
+
+	display: none;
+}
+
+.content {
+
+	text-align: center;
+}	
+
+#PWbutton{
+
+	float:right;
+	position: absolute;
+	width:140px;
+	height: 20px;
+	bottom: 10px;
+	right:5px;
+	text-align: center;
+}
+
+#pw_error{
+
+	width: 59%;
+	height: 20px;
+	color: #9C1A1C;
+	float: right;
+	margin-right: 10px;
+	margin-top: 10px;
+
+}
+
+#logout-button{
+
+	margin-top: 30px;
+
+
+}
+
+.userInfo{
+
+	width: 10%;
+	height:294px;
+	left: 20px;
+	background-color: #BDBDBD;
+	float: left;
+	position: absolute;
+	top:15%;
+	border: 1px solid black;
+	border-radius: 3px;
+	padding: 0.5%;
+
+}
+
+.postArea{
+
+	height: 100px;
+	margin-bottom: 20px;
+
+
+}
+
+.postSettings{
+
+	width: 97%;
+	height: 80%;
+	border-radius: 3px;
+	padding: 0.5%;
+
+}
+
+.centerDiv {
+
+	width:71%;
+	height:auto;
+	overflow: auto;
+	border: 1px solid black;
+	margin-left: auto;
+	margin-right: auto;
+	position: relative;
+	border-radius: 3px;
+	background-color: #BDBDBD;
+	opacity: 0.8;
+}
+
+.post {
+	height: auto;
+	background-color: #A9F5F2;
+	padding-top: 1%;
+	padding-left: 1%;
+	border: 1px solid black;
+	border-radius: 3px;
+	opacity: 0.8;
+	margin-top: 5px;
+
+}
+
+#postsHeader{
+	margin-left: auto;
+	margin-right: auto;
+	position: relative;
+	width: 71%;
+	height: 30px;
+	background-color: #BDBDBD;
+	opacity: 0.8;
+}
+
+.centerDiv h3, .mainDiv h3{
+
+	text-align: left;
+	padding-left: 1%;
+}
+
+#postButton{
+
+	margin-right: 10px;
+	width: 100px;
+
+}
+
+#reloadWallBtn{
+
+	margin-top: 20px;
+	width: 100px;
+
+}
+
+#titleDiv{
+
+	width: 50%;
+	float:left;
+}
+
+#topDiv{
+
+	width: 99%;
+	height:50px;
+	position: relative;
+	margin-bottom: 10px;
+}
+
+#serachText{
+
+	float: left;
+	margin-left: 10px;
+
+}
+
+#searchUser{
+
+	padding-left: 20px;
+	margin-bottom: 2%;
+	height: 100px;
+	width:68%;
+
+}
+
+#searchBtn{
+
+	width: auto;
+	height: auto;
+	float: left;
+}
+
+
+#browse_error{
+
+    width: 50%;
+    height: 20px;
+    color: #9C1A1C;
+    margin-left: 114px;
+    margin-top: -30px;
+    margin-bottom: 2px;
+
+}
+
+#post_error{
+
+	width: 50%;
+    height: 20px;
+    color: #9C1A1C;
+    margin-left: 114px;
+    margin-top: -24px;
+    margin-bottom: 2px;
+}
