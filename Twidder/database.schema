@@ -1,0 +1,27 @@
+DROP TABLE  IF EXISTS users;
+DROP TABLE IF EXISTS messages;
+
+CREATE TABLE users (
+
+  email TEXT PRIMARY KEY,
+  password TEXT,
+  firstname TEXT,
+  familyname TEXT,
+  gender TEXT,
+  city TEXt,
+  country TEXT);
+
+CREATE TABLE messages(
+
+  post_from TEXT,
+  post_to TEXT,
+  message TEXT
+
+);
+
+CREATE TABLE logged_in_users (
+
+  email TEXT,
+  token TEXt
+
+);
