@@ -50,16 +50,16 @@ loginfunc = function(){
 		//new view
 		localStorage.setItem("myToken", loginObj.data);
 		displayView();
-
 	}
 	else{
 
-		document.getElementById("error").innerHTML = loginObj.message;
+		document.getElementById("login_error").innerHTML = loginObj.message;
 
 
 	}
 
-	return false
+	return false;
+
 };
 
 pwcheck = function(){
