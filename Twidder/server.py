@@ -7,6 +7,7 @@ import json
 from flask import Flask, request
 
 import database_helper
+import uuid
 
 app = Flask(__name__)
 app.debug = True
@@ -42,17 +43,19 @@ def sign_in():
     if len(user_status) != 0:
         returnmsg = {
             'sucess': False,
-            'message': " User is already logged in "}
+            'message': " User is already logged in ",
+            'data': ''}
         return json.dumps(returnmsg, indent=4)
     else:
         # find user, thus checking if email/password exists
         usr = database_helper.get_user(email, password)
         # generate token
-        token = "temptoken"  # str(uuid.uuid4().get_hex())
+        token = str(uuid.uuid4().get_hex())
         if len(usr) == 0:
             returnmsg = {
                 'sucess': False,
-                'message': "Wrong username or password."}
+                'message': "Wrong username or password.",
+                'data': '-'}
             return json.dumps(returnmsg, indent=4)
         else:
             # add user to logged in users
@@ -85,18 +88,20 @@ def sign_up():
             # make sure that the user was added correctly
             returnmsg = {
                 'sucess': False,
-                'message': "Form data missing or incorrect type."}
+                'message': "Form data missing or incorrect type.",
+                'data': '-'}
             return json.dumps(returnmsg, indent=4)
         else:
             returnmsg = {
                 'success': True,
-                'message': "Successfully created a new user."}
+                'message': "Successfully created a new user.",
+                'data': '-'}
             return json.dumps(returnmsg, indent=4)
     else:
         returnmsg = {
             'sucess': False,
             'message': "User already exists.",
-            'data': check}
+            'data': '-'}
         return json.dumps(returnmsg, indent=4)
 
 
@@ -113,12 +118,14 @@ def sign_out():
         if len(check) == 0:
             returnmsg = {
                 'sucess': True,
-                'message': "Successfully signed out."}
+                'message': "Successfully signed out.",
+                'data': '-'}
             return json.dumps(returnmsg, indent=4)
     else:
         returnmsg = {
             'sucess': False,
-            'message': "You are not signed in."}
+            'message': "You are not signed in.",
+            'data': '-'}
         return json.dumps(returnmsg)
 
 
@@ -135,7 +142,7 @@ def change_password():
         returnmsg = {
             'sucess': False,
             'message': "User not logged in",
-            'logged_in_users': logged_in_users}
+            'data': '-'}
         return json.dumps(returnmsg)
 
     email = logged_in_users[token]
@@ -144,7 +151,8 @@ def change_password():
     if len(usr) < 1:
         returnmsg = {
             'sucess': False,
-            'message': "Wrong password"}
+            'message': "Wrong password",
+            'data': '-'}
         return json.dumps(returnmsg, indent=4)
     else:
         # user logged in and entered the correct password!
@@ -152,12 +160,14 @@ def change_password():
         if len(database_helper.get_user(email, new_password)) is not 0:
             returnmsg = {
                 'sucess': True,
-                'message': "Password changed."}
+                'message': "Password changed.",
+                'data': '-'}
             return json.dumps(returnmsg)
         else:
             returnmsg = {
                 'sucess': False,
-                'message': "Something went wrong..."}
+                'message': "Something went wrong...",
+                'data': '-'}
             return json.dumps(returnmsg)
 
 
@@ -170,7 +180,8 @@ def get_user_data_by_token(token):
         if user is None:
             returnmsg = {
                 'success': False,
-                'message': "User does not exist"}
+                'message': "User does not exist",
+                'data': '-'}
             return returnmsg
         else:
             return json.dumps(user, indent=4, ensure_ascii=False).encode('utf8')
@@ -178,7 +189,8 @@ def get_user_data_by_token(token):
         # if user not logged in
         returnmsg = {
             'success': False,
-            'message': "User does not exist"}
+            'message': "User does not exist",
+            'data': '-'}
         return returnmsg
 
 
@@ -187,14 +199,16 @@ def get_user_data_by_email(token, email):
     if token not in logged_in_users:
         returnmsg = {
             'success': False,
-            'message': "You are not signed in."}
+            'message': "You are not signed in.",
+            'data': '-'}
         return returnmsg
 
     info = database_helper.get_userinfo(email)
     if info is None:
         returnmsg = {
             'success': False,
-            'message': "User does not exist"}
+            'message': "User does not exist",
+            'data': '-'}
         return returnmsg
     else:
         return json.dumps(info, indent=4, ensure_ascii=False).encode('utf8')
@@ -206,7 +220,8 @@ def get_user_messages_by_token(token):
     if token not in logged_in_users:
         returnmsg = {
             'success': False,
-            'message': "You are not signed in"}
+            'message': "You are not signed in",
+            'data': '-'}
         return json.dumps(returnmsg, indent=4)
     email = logged_in_users[token]
     messages = database_helper.get_messages(email)
@@ -219,14 +234,16 @@ def get_user_messages_by_email(token, email):
     if token not in logged_in_users:
         returnmsg = {
             'success': False,
-            'message': "You are not signed in"}
+            'message': "You are not signed in",
+            'data': '-'}
         return returnmsg
     # check if user exists
     user = database_helper.get_userinfo(email)
     if user is None:
         returnmsg = {
             'success': False,
-            'message': "User does not exist"}
+            'message': "User does not exist",
+            'data': '-'}
         return returnmsg
     messages = database_helper.get_messages(email)
     return json.dumps(messages, indent=4)
@@ -239,7 +256,8 @@ def post_message():
     if token not in logged_in_users:
         returnmsg = {
             'success': False,
-            'message': "You are not signed in"}
+            'message': "You are not signed in",
+            'data': '-'}
         return json.dumps(returnmsg, indent=4)
     # retrieve the rest of the information
     message = request.form['message']
@@ -249,14 +267,16 @@ def post_message():
     if len(to_usr) is None:
         returnmsg = {
             'success': False,
-            'message': "User does not exist"}
+            'message': "User does not exist",
+            'data': '-'}
         return json.dumps(returnmsg)
     # get current users email and post the message
     from_email = logged_in_users[token]
     database_helper.add_message(from_email, to_email, message)
     returnmsg = {
         'success': True,
-        'message': "Message posted"}
+        'message': "Message posted",
+        'data': '-'}
     return json.dumps(returnmsg)
 
 
