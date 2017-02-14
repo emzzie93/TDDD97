@@ -38,7 +38,6 @@ window.onload = function(){
 /* login window*/
 
 loginfunc = function(){
-
 	
 	var usrname = document.getElementById("username").value;
 	var inputpw = document.getElementById("password").value;
