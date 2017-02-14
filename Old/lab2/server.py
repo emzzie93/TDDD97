@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 
 
-from flask import Flask, request
-import database_helper
 import json
-import uuid # to make random token later.
+
+from flask import Flask, request
+
+import database_helper
 
 app = Flask(__name__)
 app.debug = True

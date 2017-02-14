@@ -1,0 +1,34 @@
+create websocket after authentication
+
+
+Client              Server
+  |  login(usr,pw)--->  |
+  |     <- token        |
+token   ------>         |
+  |    <------>         |
+
+  terminate websocket after logout
+
+  -----------------------------
+
+  XMLHttpRequest -> classname
+
+  var con = newXMLHttpRequest();
+
+  con.open("post", '/savecontact', true);
+
+  con.onreadystatechange = function() {
+    if(con.readyState == 4 && con.status == 200) {
+        document.getElementById("msg").innerHTML = "contact Added";
+    } else{
+        docuent.getElementById("msg").innerHTML = "Something went wrong"
+    }
+
+   con.setRequestHeader
+   con.send()
+
+  }
+
+
+  con.open("GET", '/savecontact/' + "rest_of_url" , true);
+  When get -> JSON.parse(...)

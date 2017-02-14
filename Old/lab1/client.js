@@ -14,13 +14,14 @@ displayView = function(){
 	else{
 
 		var view = document.getElementById("profileView").innerHTML;
+		addinfo("me");
 	}
 
 	
 	var myview =  document.getElementById('currentView');
-
 	myview.innerHTML = view;
-	addinfo("me");
+
+
 };
 
 window.onload = function(){
