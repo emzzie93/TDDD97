@@ -44,7 +44,7 @@ def sign_in():
         returnmsg = {
             'sucess': False,
             'message': " User is already logged in ",
-            'data': ''}
+            'data': '-'}
         return json.dumps(returnmsg, indent=4)
     else:
         # find user, thus checking if email/password exists
