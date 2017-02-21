@@ -1,22 +1,21 @@
 <!DOCTYPE html>
 
-<html> 
+<html>
 	<head>
 
 		<title>Twidder</title>
 
-		<link rel="stylesheet" type="text/css" href="client.css">
-		<script type="text/javascript" src = "client.js"></script>
-		<script type="text/javascript" src = "serverstub.js"></script>
+		<link href="static/client.css" rel="stylesheet" type="text/css" >
+		<script type="text/javascript" src = "static/client.js"></script>
 
 		<script id="loginView" type='text/view'>
-			
+
 			<div id="block">
-	
+
 				<div id="logo-div">
-					<img id="logo" src="wimage.png" width="338px" height="398px" alt="logo and slogan">
+					<img id="logo" src="static/wimage.png" width="338px" height="398px" alt="logo and slogan">
 				</div>
-	
+
 				<div id="login-box">
 
 					<div id = "top-box">
@@ -38,9 +37,9 @@
 						<form id="signUpForm" method="POST" onsubmit="return pwcheck()">
 							<label>First name</label> <input id="firstname" type="text" name="Name" required><br>
 							<label>Family name</label> <input id="familyname" type="text" name="Last-name" required ><br>
-							<label>Gender</label> 
+							<label>Gender</label>
 							<select id="gender" name="Gender" >
-								<option value="female"> female </option>	
+								<option value="female"> female </option>
 								<option value="male"> male </option>
 								<option value="other"> other</option>
 							</select>
@@ -49,7 +48,7 @@
 							<label>Email</label><input id="email" type="email" name="Email" required>
 							<label>Password</label><input id="Password1" type="Password" name="Password1"  placeholder="atleast 8 characters" minlength="8" required>
 							<label>Repeat PSW</label><input id="Password2" type="Password" name="Password2" minlength="8" required><br>
-							<input id="signUp-button" type="submit" name="signUp" value="signUp" required> 
+							<input id="signUp-button" type="submit" name="signUp" value="signUp" required>
 						</form>
 
 
@@ -203,7 +202,7 @@
 
 
 	<body>
-		
+
 	<div id="currentView"></div>
 
 

@@ -47,9 +47,18 @@ def set_password(email, old_password, new_password):
 
 def get_userinfo(email):
     db = get_db()
+    db.row_factory = sqlite3.Row
     cursor = db.cursor()
     res = cursor.execute("SELECT email, firstname, familyname, gender, city, country FROM users WHERE email= ?", (email,))
-    usrinfo = res.fetchall()
+    all_usrinfo = res.fetchall()
+    usrinfo = {}
+    for row in all_usrinfo:
+        usrinfo["email"] = row['email']
+        usrinfo["firstname"] = row['firstname']
+        usrinfo["familyname"] = row['familyname']
+        usrinfo["gender"] = row['gender']
+        usrinfo["city"] = row['city']
+        usrinfo["country"] = row['country']
     return usrinfo
 
 
@@ -63,8 +72,15 @@ def add_message(from_email, to_email, message):
 def get_messages(email):
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT message FROM messages WHERE post_to=?", (email,))
-    msges = cursor.fetchall()
+    cursor.execute("SELECT message, post_from FROM messages WHERE post_to=?", (email,))
+    all_msges = cursor.fetchall()
+    msges = []
+    for row in all_msges:
+        message = {
+            'content': row['message'],  # all_msges[i][0],
+            'writer': row['post_from']  # all_msges[i][1]
+        }
+        msges.append(message)
     return msges
 
 
@@ -76,7 +92,7 @@ def get_logged_in_user(email):
     return user
 
 
-def set_logged_in_user(email, token):
+def add_logged_in_user(email, token):
     db = get_db()
     cursor = db.cursor()
     cursor.execute("INSERT INTO logged_in_users VALUES (?,?)", (email, token))
@@ -85,13 +101,17 @@ def set_logged_in_user(email, token):
 
 def find_logged_in_user(token):
     db = get_db()
+    db.row_factory = sqlite3.Row
     cursor = db.cursor()
-    cursor.execute("SELECT token FROM logged_in_users WHERE token=?", (token,))
-    logged_in_user = cursor.fetchall()
-    return logged_in_user
+    cursor.execute("SELECT email FROM logged_in_users WHERE token=?", (token,))
+    logged_in_users = cursor.fetchall()
+    email_user = {}
+    for row in logged_in_users:
+        email_user = row['email']
+    return email_user
 
 
-def log_out_user(token):
+def remove_logged_in_user(token):
     db = get_db()
     cursor = db.cursor()
     cursor.execute("DELETE FROM logged_in_users WHERE token=?", (token,))
