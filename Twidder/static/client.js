@@ -55,14 +55,14 @@ loginfunc = function(usrname, inputpw){
 				//new view
 				localStorage.setItem("myToken", msg.data);
 				my_email = usrname;
-
 				displayView();
-			} else{
+				SocketConn(usrname, msg.data);
 
+			} else{
 				document.getElementById("login_error").innerHTML = msg.message;
 			}
         } else {
-			document.getElementById("login_error").innerHTML = "problem connecting to server... json?"
+			document.getElementById("login_error").innerHTML = "problem connecting to server."
 		}
     };
 
@@ -125,15 +125,55 @@ pwcheck = function(){
 
 };
 
+/*     Socket    */
+
+SocketConn = function (email, token) {
+
+	var socket = new WebSocket("ws://127.0.0.1:5000/init_socket");
+/*
+	socket.onerror = function () {
+            console.log("error message!");
+            logout();
+    };*/
+
+	socket.onopen = function (ev) {
+		console.log("open!");
+		socket.send(JSON.stringify({"email": email, "token": token}));
+    };
+
+    socket.onclose = function () {
+		//socket.close();
+		console.log("onclose");
+		//logout();
+		
+    };
+
+    socket.onmessage = function (event) {
+		if(event.data == "[sign_in] log_out"){
+			console.log("logout: " + event.data);
+			localStorage.removeItem("myToken");
+			displayView();
+
+		} else if (event.data == "[log_out] close") {
+			console.log("closing socket");
+			socket.close()
+		}
+ 		else{
+			console.log("on message: " + event.data);
+		}
+    }
+
+};
+
 /* Profile-view functions */
 
-var showpanel = function(element, TabId){
+showpanel = function(element, TabId){
 
 	var tabviews = document.getElementsByClassName("content");
 
-	for(var i = 0; i < tabviews.length; i++){
+	for(var j = 0; j < tabviews.length; j++){
 
-		tabviews[i].style.display = "none";
+		tabviews[j].style.display = "none";
 
 	}
 
@@ -151,7 +191,7 @@ var showpanel = function(element, TabId){
 
 };
 
-var addinfo = function(usr){
+addinfo = function(usr){
 
 	var myToken = localStorage.getItem("myToken");
 	var req = new XMLHttpRequest();
@@ -242,9 +282,9 @@ var addinfo = function(usr){
 
 /*   Account  */
 
-var showform = function(){
+showform = function(){
 
-	el = document.getElementById("pwform").style.display;
+	var el = document.getElementById("pwform").style.display;
 
 	if(el === "none"){
 		document.getElementById("pwform").style.display = "block";
@@ -258,7 +298,7 @@ var showform = function(){
 	}
 };
 
-var newPassword = function(){
+newPassword = function(){
 
 		var oldPW = document.getElementById("old");
 		var newpw1 = document.getElementById("newpw1");
@@ -298,7 +338,7 @@ var newPassword = function(){
 return false;
 };
 
-var logout = function(){
+logout = function(){
 
 	var req = new XMLHttpRequest();
 	req.open('POST', '/sign_out', true);
@@ -321,7 +361,7 @@ var logout = function(){
 
 /*    Browse     */
 
-var postOnWall = function(textArea, toWall, to_usr) {
+postOnWall = function(textArea, toWall, to_usr) {
 
     var text = document.getElementById(textArea).value;
     var token = localStorage.getItem("myToken");
@@ -356,7 +396,7 @@ var postOnWall = function(textArea, toWall, to_usr) {
 	}
 };
 
-var post = function(text, author, wall){
+post = function(text, author, wall){
 
 	var postPlace = document.getElementById(wall);
 	var NewPost = document.createElement('div');
@@ -380,46 +420,45 @@ var post = function(text, author, wall){
 	}
 };
 
-var reloadWall = function(wall){
+reloadWall = function(wall){
 	var token = localStorage.getItem("myToken");
 	var req = new XMLHttpRequest();
 	if (user == "me") {
 		req.open("GET", 'get_user_messages_by_token/' + token);
-		req.setRequestHeader("Content-type", "application/json")
+		req.setRequestHeader("Content-type", "application/json");
 		req.onreadystatechange = function () {
 			if(req.readyState == 4 && req.status == 200) {
-				var newTxt = JSON.parse(req.responseText).data[0];
+				var Txt = JSON.parse(req.responseText).data;
+				var newTxt = Txt[Txt.length-1];
 				var post_wall = document.getElementById(wall);
 				var oldTxt = document.getElementById(wall).firstChild.lastChild.innerHTML;
-
 				if (oldTxt != newTxt.content){
 					post(newTxt.content, newTxt.writer, post_wall.id);
 				}
 			}
         };
-
+		req.send(null);
     } else{
 		req.open("GET", 'get_user_messages_by_email/' + token + '/' + user);
 		req.setRequestHeader("Content-type", "application/json");
 		req.onreadystatechange = function () {
 			if(req.readyState == 4 && req.status == 200) {
-				var newTxt = JSON.parse(req.responseText).data[0];
+				var Txt = JSON.parse(req.responseText).data;
+				var newTxt = Txt[Txt.length-1];
 				var post_wall = document.getElementById(wall);
 				var oldTxt = document.getElementById(wall).firstChild.lastChild.innerHTML;
-
 				if (oldTxt != newTxt.content){
 					post(newTxt.content, newTxt.writer, post_wall.id);
 				}
 			}
         };
+		req.send(null);
 
 	}
 
 };
 
-var loadUser = function(){
-
-	var token = localStorage.getItem("myToken");
+loadUser = function(){
 	var usr = document.getElementById("serachText").value;
 	currUserPage = usr;
 	document.getElementById("browsedContent").style.display = "block";

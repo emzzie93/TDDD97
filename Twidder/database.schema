@@ -1,5 +1,6 @@
 DROP TABLE  IF EXISTS users;
 DROP TABLE IF EXISTS messages;
+DROP TABLE IF EXISTS logged_in_users;
 
 CREATE TABLE users (
 
@@ -13,6 +14,7 @@ CREATE TABLE users (
 
 CREATE TABLE messages(
 
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
   post_from TEXT,
   post_to TEXT,
   message TEXT
@@ -22,6 +24,7 @@ CREATE TABLE messages(
 CREATE TABLE logged_in_users (
 
   email TEXT,
-  token TEXt
+  token TEXT
 
 );
+

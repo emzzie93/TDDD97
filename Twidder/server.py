@@ -3,14 +3,18 @@
 
 
 import json
-
+from gevent.wsgi import WSGIServer
+from geventwebsocket.handler import WebSocketHandler
 from flask import Flask, request
+from geventwebsocket import WebSocketError
 
 import database_helper
 import uuid
 
 app = Flask(__name__)
 app.debug = True
+
+active_sockets = {}
 
 
 # connect to database
@@ -34,37 +38,37 @@ def home():
 @app.route("/sign_in", methods=['POST'])
 def sign_in():
     # get email and password from form
-    # email = request.json['login_email']
     email = request.json['login_email']
-    # password = request.json['login_password']
     password = request.json['login_password']
     # check if user is logged in
     user_status = database_helper.get_logged_in_user(email)
-    if len(user_status) != 0:
+
+    # find user, thus checking if email/password exists
+    usr = database_helper.get_user(email, password)
+    # generate token
+    token = str(uuid.uuid4().get_hex())
+    if len(usr) == 0:
         returnmsg = {
             'success': False,
-            'message': " User is already logged in ",
+            'message': "Wrong username or password.",
             'data': '-'}
         return json.dumps(returnmsg, indent=4)
+
     else:
-        # find user, thus checking if email/password exists
-        usr = database_helper.get_user(email, password)
-        # generate token
-        token = str(uuid.uuid4().get_hex())
-        if len(usr) == 0:
-            returnmsg = {
-                'success': False,
-                'message': "Wrong username or password.",
-                'data': '-'}
-            return json.dumps(returnmsg, indent=4)
-        else:
-            # add user to logged in users
-            database_helper.add_logged_in_user(email, token)
-            returnmsg = {
-                'success': True,
-                'message': "Successfully signed in.",
-                'data': token}
-            return json.dumps(returnmsg, indent=4, ensure_ascii=False).encode('utf8')
+        if len(user_status) != 0 and user_status[0] in active_sockets:
+            message = "[sign_in] log_out"
+            old_token = user_status[0]
+            active_sockets[old_token].send(message)
+            database_helper.remove_logged_in_user(old_token)
+            del active_sockets[old_token]
+
+        # add user to logged in users
+        database_helper.add_logged_in_user(email, token)
+        returnmsg = {
+            'success': True,
+            'message': "Successfully signed in.",
+            'data': token}
+        return json.dumps(returnmsg, indent=4, ensure_ascii=False).encode('utf8')
 
 
 # sign up
@@ -114,8 +118,12 @@ def sign_out():
     if len(logged_in) != 0:
         # delete token from logged in users
         database_helper.remove_logged_in_user(token)
+        # active_sockets[token].send("log_out")
         check = database_helper.find_logged_in_user(token)
         if not check:
+            message = "[log_out] close"
+            active_sockets[token].send(message)
+            del active_sockets[token]
             returnmsg = {
                 'success': True,
                 'message': "Successfully signed out.",
@@ -306,5 +314,30 @@ def post_message():
     return json.dumps(returnmsg)
 
 
+@app.route("/init_socket")
+def init_socket():
+
+    if request.environ.get('wsgi.websocket'):
+        wsoc = request.environ.get('wsgi.websocket')
+        token = ""
+        while True:
+
+            from_client = json.loads(wsoc.receive())
+            token = from_client["token"]
+            email = from_client["email"]
+            active_sockets[token] = wsoc
+            # if wsoc.receive() is not None:
+            message = wsoc.receive()
+            if message is None:
+                if token in active_sockets:
+                    del active_sockets[token]
+                print("!!---------closed socket: " + email +" -----------!!")
+                break
+            wsoc.send(message)
+        return ''
+
+
 if __name__ == "__main__":
-    app.run()
+    # app.run()
+    twidder_server = WSGIServer(('127.0.0.1', 5000), app, handler_class=WebSocketHandler)
+    twidder_server.serve_forever()

@@ -3,6 +3,8 @@
 import sqlite3
 from flask import g
 
+
+
 DATABASE = '/home/emma/Documents/TDDD97/Twidder/database.db'
 
 
@@ -65,7 +67,7 @@ def get_userinfo(email):
 def add_message(from_email, to_email, message):
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("INSERT INTO messages VALUES(?,?,?)", (from_email, to_email, message))
+    cursor.execute("INSERT INTO messages VALUES(NULL, ?,?,?)", (from_email, to_email, message))
     db.commit()
 
 
@@ -80,16 +82,22 @@ def get_messages(email):
             'content': row['message'],  # all_msges[i][0],
             'writer': row['post_from']  # all_msges[i][1]
         }
+
         msges.append(message)
+
     return msges
 
 
 def get_logged_in_user(email):
     db = get_db()
+    db.row_factory = sqlite3.Row
     cursor = db.cursor()
-    cursor.execute("SELECT email FROM logged_in_users WHERE email=?", (email,))
+    cursor.execute("SELECT token FROM logged_in_users WHERE email=?", (email,))
     user = cursor.fetchall()
-    return user
+    token = []
+    for row in user:
+        token.append(row['token'])
+    return token
 
 
 def add_logged_in_user(email, token):
