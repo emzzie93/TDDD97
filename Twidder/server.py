@@ -6,13 +6,14 @@ import json
 from gevent.wsgi import WSGIServer
 from geventwebsocket.handler import WebSocketHandler
 from flask import Flask, request
-from geventwebsocket import WebSocketError
+from flask_bcrypt import generate_password_hash, check_password_hash, Bcrypt
 
 import database_helper
 import uuid
 
 app = Flask(__name__)
 app.debug = True
+bcrypt = Bcrypt(app)
 
 active_sockets = {}
 
@@ -37,43 +38,48 @@ def home():
 # sign in user
 @app.route("/sign_in", methods=['POST'])
 def sign_in():
+
     # get email and password from form
     email = request.json['login_email']
     password = request.json['login_password']
-    # check if user is logged in
-    user_status = database_helper.get_logged_in_user(email)
 
     # find user, thus checking if email/password exists
-    usr = database_helper.get_user(email, password)
-    # generate token
-    token = str(uuid.uuid4().get_hex())
-    if len(usr) == 0:
+    hashed_pw = database_helper.get_password(email)[0][0]
+    # checking if user in database and if the correct password is given
+    if not hashed_pw or not check_password_hash(hashed_pw, password):
         returnmsg = {
             'success': False,
             'message': "Wrong username or password.",
             'data': '-'}
         return json.dumps(returnmsg, indent=4)
 
-    else:
-        if len(user_status) != 0 and user_status[0] in active_sockets:
-            message = "[sign_in] log_out"
-            old_token = user_status[0]
-            active_sockets[old_token].send(message)
-            database_helper.remove_logged_in_user(old_token)
-            del active_sockets[old_token]
+    # check if user is logged in
+    user_status = database_helper.get_logged_in_user(email)
 
-        # add user to logged in users
-        database_helper.add_logged_in_user(email, token)
-        returnmsg = {
-            'success': True,
-            'message': "Successfully signed in.",
-            'data': token}
-        return json.dumps(returnmsg, indent=4, ensure_ascii=False).encode('utf8')
+    # if user is logged in somewhere else and socket is active
+    if len(user_status) != 0 and user_status[0] in active_sockets:
+        message = "[sign_in] log_out"
+        old_token = user_status[0]
+        active_sockets[old_token].send(message)
+        database_helper.remove_logged_in_user(old_token)
+        del active_sockets[old_token]
+
+    # generate token
+    token = str(uuid.uuid4().get_hex())
+
+    # add user to logged in users
+    database_helper.add_logged_in_user(email, token)
+    returnmsg = {
+        'success': True,
+        'message': "Successfully signed in.",
+        'data': token}
+    return json.dumps(returnmsg, indent=4, ensure_ascii=False).encode('utf8')
 
 
 # sign up
 @app.route("/sign_up", methods=['POST'])
 def sign_up():
+
     # retrieve all info from form
     email = request.json['email']
     password = request.json['password']
@@ -82,12 +88,17 @@ def sign_up():
     gender = request.json['gender']
     city = request.json['city']
     country = request.json['country']
+
     # make sure that the user does not exist
     check = database_helper.get_user(email, password)
     if len(check) == 0:
-        # if no such user, add to database!
-        database_helper.add_user(email, password, firstname, familyname, gender, city, country)
-        usr = database_helper.get_user(email, password)
+
+        # if no such user, hash the password
+        hash_pw = generate_password_hash(password, 5)
+
+        #  add new user to database!
+        database_helper.add_user(email, hash_pw, firstname, familyname, gender, city, country)
+        usr = database_helper.get_user(email, hash_pw)
         if len(usr) == 0:
             # make sure that the user was added correctly
             returnmsg = {
@@ -118,17 +129,17 @@ def sign_out():
     if len(logged_in) != 0:
         # delete token from logged in users
         database_helper.remove_logged_in_user(token)
-        # active_sockets[token].send("log_out")
         check = database_helper.find_logged_in_user(token)
-        if not check:
+        # if no longer logged in but still active socket
+        if not check and token in active_sockets:
             message = "[log_out] close"
             active_sockets[token].send(message)
             del active_sockets[token]
-            returnmsg = {
-                'success': True,
-                'message': "Successfully signed out.",
-                'data': '-'}
-            return json.dumps(returnmsg, indent=4)
+        returnmsg = {
+            'success': True,
+            'message': "Successfully signed out.",
+            'data': '-'}
+        return json.dumps(returnmsg, indent=4)
     else:
         returnmsg = {
             'success': False,
@@ -147,7 +158,6 @@ def change_password():
 
     user_email = database_helper.find_logged_in_user(token)
     # check if user is logged in
-
     if not user_email:
         returnmsg = {
             'success': False,
@@ -155,29 +165,34 @@ def change_password():
             'data': '-'}
         return json.dumps(returnmsg)
 
-    # check if user in database (correct password)
-    usr = database_helper.get_user(user_email, old_password)
-    if len(usr) < 1:
+    # check if correct password by getting the old hashed password
+    # and cheking against the given password.
+    old_hash = database_helper.get_password(user_email)[0][0]
+    correct_pw = check_password_hash(old_hash, old_password)
+
+    if not correct_pw:
         returnmsg = {
             'success': False,
             'message': "Wrong password",
             'data': '-'}
         return json.dumps(returnmsg, indent=4)
+
+    # user logged in and entered the correct password!
+    new_password = generate_password_hash(new_password)
+
+    database_helper.set_password(user_email, old_password, new_password)
+    if not database_helper.get_user(user_email, new_password):
+        returnmsg = {
+            'success': True,
+            'message': "Password changed.",
+            'data': '-'}
+        return json.dumps(returnmsg)
     else:
-        # user logged in and entered the correct password!
-        database_helper.set_password(user_email, old_password, new_password)
-        if len(database_helper.get_user(user_email, new_password)) is not 0:
-            returnmsg = {
-                'success': True,
-                'message': "Password changed.",
-                'data': '-'}
-            return json.dumps(returnmsg)
-        else:
-            returnmsg = {
-                'success': False,
-                'message': "Something went wrong...",
-                'data': '-'}
-            return json.dumps(returnmsg)
+        returnmsg = {
+            'success': False,
+            'message': "Something went wrong...",
+            'data': '-'}
+        return json.dumps(returnmsg)
 
 
 @app.route("/get_user_data_by_token/<token>", methods=['GET'])
@@ -341,3 +356,4 @@ if __name__ == "__main__":
     # app.run()
     twidder_server = WSGIServer(('127.0.0.1', 5000), app, handler_class=WebSocketHandler)
     twidder_server.serve_forever()
+

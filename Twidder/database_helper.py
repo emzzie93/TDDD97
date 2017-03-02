@@ -4,7 +4,6 @@ import sqlite3
 from flask import g
 
 
-
 DATABASE = '/home/emma/Documents/TDDD97/Twidder/database.db'
 
 
@@ -27,7 +26,8 @@ def close_db(error):
 def get_user(email, password):
     db = get_db()
     cursor = db.cursor()
-    result = cursor.execute("SELECT email, password FROM users WHERE email=? AND password=?", (email, password))
+    result = cursor.execute("SELECT email, password FROM users WHERE email=? AND password=?",
+                            (email, password))
     usr = result.fetchall()
     return usr
 
@@ -43,7 +43,8 @@ def add_user(email, password, firstname, familyname, gender, city, country):
 def set_password(email, old_password, new_password):
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("UPDATE users SET password = ? WHERE email = ? AND password = ?", (new_password, email, old_password))
+    cursor.execute("UPDATE users SET password = ? WHERE email = ? AND password = ?",
+                   (new_password, email, old_password))
     db.commit()
 
 
@@ -51,7 +52,8 @@ def get_userinfo(email):
     db = get_db()
     db.row_factory = sqlite3.Row
     cursor = db.cursor()
-    res = cursor.execute("SELECT email, firstname, familyname, gender, city, country FROM users WHERE email= ?", (email,))
+    res = cursor.execute("SELECT email, firstname, familyname, gender, city, country FROM users WHERE email= ?",
+                         (email,))
     all_usrinfo = res.fetchall()
     usrinfo = {}
     for row in all_usrinfo:
@@ -124,3 +126,11 @@ def remove_logged_in_user(token):
     cursor = db.cursor()
     cursor.execute("DELETE FROM logged_in_users WHERE token=?", (token,))
     db.commit()
+
+
+def get_password(email):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT password FROM users WHERE email=?", (email,))
+    hash_pw = cursor.fetchall()
+    return hash_pw
