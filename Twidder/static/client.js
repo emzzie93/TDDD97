@@ -2,7 +2,10 @@ var currUserPage = "me";
 var user = "me";
 var addinfoview = false;
 var view = "not set";
-var my_email = "not set";
+var my_email = "emma@soder.se";
+var error = false;
+var numOfPosts = 0;
+
 /* View functions */
 
 displayView = function(){
@@ -31,14 +34,32 @@ displayView = function(){
 };
 
 window.onload = function(){
-
 	displayView();
 
+};
+
+/* hashfunction
+ *
+ * This function uses the CryptoJS HMAC-SHA256 hashing algoritm. The input message is then hashed with the
+ * token and returned.
+ *
+ * message:A string of all variables to be sent.
+ *
+ * Changes done in the code due to this implementation is that
+ *
+ */
+
+hash_message = function (message) {
+
+	var token = localStorage.getItem("myToken");
+	var hashed_msg = CryptoJS.HmacSHA256(message, token).toString(CryptoJS.enc.Hex);
+	return hashed_msg;
 };
 
 /* login window*/
 
 loginfunc = function(usrname, inputpw){
+	document.getElementById("login_error").innerHTML ="";
 	if (usrname == undefined && inputpw == undefined) {
         usrname = document.getElementById("username").value;
         inputpw = document.getElementById("password").value;
@@ -74,7 +95,7 @@ loginfunc = function(usrname, inputpw){
 
 pwcheck = function(){
 
-	
+	document.getElementById("signup_error").innerHTML = "";
 	var pw1 = document.getElementById("Password1").value;
 	var pw2 = document.getElementById("Password2").value;
 
@@ -193,72 +214,39 @@ showpanel = function(element, TabId){
 
 addinfo = function(usr){
 
-	var myToken = localStorage.getItem("myToken");
+	error = false;
+	document.getElementById("browsedContent").style.display = "none";
+	document.getElementById("B_usrContentDiv").style.display = "none";
+	document.getElementById("browse_error").innerHTML = "";
+
 	var req = new XMLHttpRequest();
 	var msgreq = new XMLHttpRequest();
 
 	if(usr === "me"){
 	//user info
 
-
-		req.open("GET", '/get_user_data_by_token/' + myToken, true);
+		var hashed_message = hash_message(my_email);
+		req.open("GET", '/get_user_data_by_email/' + hashed_message + '/' + my_email + '/' + my_email, true);
 		req.setRequestHeader("Content-type", "application/json");
 		req.onreadystatechange = function () {
 			if(req.readyState == 4 && req.status == 200){
 
 				var rec_info = JSON.parse(req.responseText);
+				console.log("message: " + rec_info.message);
 				if (rec_info.success) {
                     var infoArr = rec_info.data;
                     document.getElementById("usercontent").innerHTML = infoArr.email + "<br>" + infoArr.firstname + "<br>" + infoArr.familyname + "<br>" + infoArr.gender + "<br>" + infoArr.city + "<br>" + infoArr.country;
                     my_email = infoArr.email;
                 }
+                else
+                	error = true;
 			}
         };
 		req.send(null);
 
 	//set wall messages
 
-		msgreq.open("GET", '/get_user_messages_by_token/' + myToken, true);
-		msgreq.setRequestHeader("Content-type", "application/json");
-		msgreq.onreadystatechange = function () {
-			if(msgreq.readyState == 4 && msgreq.status == 200){
-
-				var wallPosts = JSON.parse(msgreq.responseText);
-				if(wallPosts.success)
-					var myPosts = wallPosts.data;
-					for (var i = 0; i < myPosts.length; i++) {
-						post(myPosts[i].content, myPosts[i].writer, "postsDiv")
-        		}
-			}
-        };
-		msgreq.send(null);
-	 }
-	else{
-
-		user = usr;
-
-		//var req = new XMLHttpRequest();
-		req.open("GET", '/get_user_data_by_email/' + myToken + '/' + usr, true);
-		req.setRequestHeader("Content-type", "application/json");
-		req.onreadystatechange = function () {
-			if(req.readyState == 4 && req.status == 200){
-
-				var rec_info = JSON.parse(req.responseText);
-				if (rec_info.success) {
-                    var infoArr = rec_info.data;
-                    document.getElementById("Browsedusercontent").innerHTML = infoArr.email + "<br>" + infoArr.firstname + "<br>" + infoArr.familyname + "<br>" + infoArr.gender + "<br>" + infoArr.city + "<br>" + infoArr.country;
-                }
-                else{
-					document.getElementById("browse_error").innerHTML = rec_info.message;
-				}
-			}
-        };
-		req.send(null);
-
-	//set wall messages
-		//var msgreq = new XMLHttpRequest();
-
-		msgreq.open("GET", '/get_user_messages_by_email/' + myToken + '/' + usr, true);
+		msgreq.open("GET", '/get_user_messages_by_email/' + hashed_message + '/' + my_email + '/' + my_email ,true);
 		msgreq.setRequestHeader("Content-type", "application/json");
 		msgreq.onreadystatechange = function () {
 			if(msgreq.readyState == 4 && msgreq.status == 200){
@@ -266,17 +254,69 @@ addinfo = function(usr){
 				var wallPosts = JSON.parse(msgreq.responseText);
 				if(wallPosts.success) {
                     var myPosts = wallPosts.data;
-                    for (var i = 0; i < myPosts.length; i++) {
-                        post(myPosts[i].content, myPosts[i].writer, "B_postsDiv")
+                    if (myPosts != null) {
+                        for (var i = 0; i < myPosts.length; i++) {
+                            post(myPosts[i].content, myPosts[i].writer, "postsDiv")
+                            console.log(myPosts[i].content);
+                        }
                     }
+
                 }
-        		else{
-					document.getElementById("browse_error").innerHTML = "get message by email" + wallPosts.message;
-				}
+                else {
+                    error = true;
+                }
 			}
         };
 		msgreq.send(null);
 	 }
+	else {
+
+        user = usr;
+        console.log("user: " + user);
+        var hashed_message = hash_message(usr);
+        //var req = new XMLHttpRequest();
+        req.open("GET", '/get_user_data_by_email/' + hashed_message + '/' + my_email + '/' + usr, true);
+        req.setRequestHeader("Content-type", "application/json");
+        req.onreadystatechange = function () {
+            if (req.readyState == 4 && req.status == 200) {
+
+                var rec_info = JSON.parse(req.responseText);
+                if (rec_info.success) {
+                    var infoArr = rec_info.data;
+                    document.getElementById("Browsedusercontent").innerHTML = infoArr.email + "<br>" + infoArr.firstname + "<br>" + infoArr.familyname + "<br>" + infoArr.gender + "<br>" + infoArr.city + "<br>" + infoArr.country;
+                } else {
+                    document.getElementById("browse_error").innerHTML = rec_info.message;
+                    error = true;
+                }
+            }
+        };
+        req.send(null);
+
+        //set wall messages
+        //var msgreq = new XMLHttpRequest();
+        if (!error) {
+            msgreq.open("GET", '/get_user_messages_by_email/' + hashed_message + '/' + my_email + '/' + usr, true);
+            msgreq.setRequestHeader("Content-type", "application/json");
+            msgreq.onreadystatechange = function () {
+                if (msgreq.readyState == 4 && msgreq.status == 200) {
+
+                    var wallPosts = JSON.parse(msgreq.responseText);
+                    if (wallPosts.success) {
+                        var myPosts = wallPosts.data;
+                        for (var i = 0; i < myPosts.length; i++) {
+                            post(myPosts[i].content, myPosts[i].writer, "B_postsDiv");
+                        }
+                    }
+                    else {
+                        document.getElementById("browse_error").innerHTML = wallPosts.message;
+                        error = true;
+                    }
+                }
+            };
+            msgreq.send(null);
+        }
+    }
+
 
 };
 
@@ -310,7 +350,7 @@ newPassword = function(){
 		}
 		else{
 
-			var temptoken = localStorage.getItem("myToken");
+			//var temptoken = localStorage.getItem("myToken");
 
 			var req = new XMLHttpRequest();
 
@@ -327,8 +367,11 @@ newPassword = function(){
 					}
 				}
 			};
+
+			var authentication = hash_message(oldPW.value + newpw1.value);
 			var data = {
-				"token": temptoken,
+				"authentication": authentication,
+				"email": my_email,
 				"old_password": oldPW.value,
 				"new_password": newpw1.value
 			};
@@ -346,6 +389,7 @@ logout = function(){
 	req.onreadystatechange = function () {
 		if (req.readyState == 4 && req.status == 200) {
 			var msg = JSON.parse(req.responseText);
+			console.log("success: " + msg.success + "msg: " + msg.message);
 			if (msg.success){
 				localStorage.removeItem("myToken");
 				displayView();
@@ -353,13 +397,30 @@ logout = function(){
 		}
 	};
 
-	var token = {"token": localStorage.getItem("myToken")};
-	req.send(JSON.stringify(token));
-
+	var token = localStorage.getItem("myToken");
+	var data = {
+        'token': token
+    	};
+	req.send(JSON.stringify(data));
 
 };
 
 /*    Browse     */
+
+ondrop = function (event) {
+	event.preventDefault();
+	if(event.target.className == 'postSettings') {
+        var data = event.dataTransfer.getData("Text");
+        console.log(data);
+        var postText = document.getElementById(data).lastChild.innerHTML;
+        event.target.value = postText;
+
+    }
+};
+
+allowDrop = function (event) {
+	event.preventDefault()
+};
 
 postOnWall = function(textArea, toWall, to_usr) {
 
@@ -388,13 +449,17 @@ postOnWall = function(textArea, toWall, to_usr) {
                 }
             }
         };
+        var auth = hash_message(to_email + text);
         var postContent = {
-            'token': token,
-            'message': text,
+            'email': my_email,
+            'authentication': auth,
+			'message': text,
             'to_email': to_email};
     	req.send(JSON.stringify(postContent))
 	}
 };
+
+
 
 post = function(text, author, wall){
 
@@ -406,32 +471,49 @@ post = function(text, author, wall){
 	Header.innerHTML = author + ":";
 	Header.style.textAlign = "left";
 	NewPost.className = "post";
+	NewPost.id = "postNr" + numOfPosts;
+	numOfPosts = numOfPosts + 1;
 	MyText.innerHTML = text;
 	MyText.style.textAlign = "left";
 
+	NewPost.ondragstart = function(){
+		console.log("dragstart: " + event.target.id);
+		event.dataTransfer.setData("Text", event.target.id);
+		console.log(event.dataTransfer.getData("Text"))
+
+	};
 
 	NewPost.insertBefore(Header, NewPost.firstChild);
 	NewPost.appendChild(MyText);
 	if(postPlace != null) {
         postPlace.insertBefore(NewPost, postPlace.firstChild);
     } else{
-
 		postPlace.appendChild(NewPost)
 	}
+
+	//making the post-text on the wall draggalbe!
+	NewPost.draggable = true;
+
 };
 
 reloadWall = function(wall){
+
 	var token = localStorage.getItem("myToken");
+	var hashed_msg = hash_message(my_email);
 	var req = new XMLHttpRequest();
 	if (user == "me") {
-		req.open("GET", 'get_user_messages_by_token/' + token);
+		req.open("GET", 'get_user_messages_by_email/' + hashed_msg + + '/' + my_email + '/' + my_email);
 		req.setRequestHeader("Content-type", "application/json");
 		req.onreadystatechange = function () {
 			if(req.readyState == 4 && req.status == 200) {
 				var Txt = JSON.parse(req.responseText).data;
 				var newTxt = Txt[Txt.length-1];
 				var post_wall = document.getElementById(wall);
-				var oldTxt = document.getElementById(wall).firstChild.lastChild.innerHTML;
+				if (document.getElementById(wall) != null) {
+                    var oldTxt = document.getElementById(wall).firstChild.lastChild.innerHTML;
+                } else {
+					post(newTxt.content, newTxt.writer, post_wall.id);
+				}
 				if (oldTxt != newTxt.content){
 					post(newTxt.content, newTxt.writer, post_wall.id);
 				}
@@ -439,14 +521,16 @@ reloadWall = function(wall){
         };
 		req.send(null);
     } else{
-		req.open("GET", 'get_user_messages_by_email/' + token + '/' + user);
+		req.open("GET", 'get_user_messages_by_email/' + hashed_msg + '/' + my_email + '/' + user);
 		req.setRequestHeader("Content-type", "application/json");
 		req.onreadystatechange = function () {
 			if(req.readyState == 4 && req.status == 200) {
 				var Txt = JSON.parse(req.responseText).data;
 				var newTxt = Txt[Txt.length-1];
 				var post_wall = document.getElementById(wall);
-				var oldTxt = document.getElementById(wall).firstChild.lastChild.innerHTML;
+				if (document.getElementById(wall).firstChild.lastChild != null) {
+                    var oldTxt = document.getElementById(wall).firstChild.lastChild.innerHTML;
+                }
 				if (oldTxt != newTxt.content){
 					post(newTxt.content, newTxt.writer, post_wall.id);
 				}
@@ -461,10 +545,14 @@ reloadWall = function(wall){
 loadUser = function(){
 	var usr = document.getElementById("serachText").value;
 	currUserPage = usr;
-	document.getElementById("browsedContent").style.display = "block";
+	document.getElementById("browsedContent").style.display = "none";
+	document.getElementById("B_usrContentDiv").style.display = "none";
 	addinfo(usr);
-	document.getElementById("B_usrContentDiv").style.display = "block";
-	user = usr;
-	reloadWall('B_postsDiv');
-
+	console.log("load user error: " + error);
+	if(!error) {
+		document.getElementById("browsedContent").style.display = "block";
+        document.getElementById("B_usrContentDiv").style.display = "block";
+        user = usr;
+        reloadWall('B_postsDiv');
+    }
 };

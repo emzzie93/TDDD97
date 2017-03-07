@@ -7,6 +7,7 @@
 
 		<link href="static/client.css" rel="stylesheet" type="text/css" >
 		<script type="text/javascript" src = "static/client.js"></script>
+		<script type="text/javascript" src = "static/CryptoJS.js"></script>
 
 		<script id="loginView" type='text/view'>
 
@@ -67,7 +68,8 @@
 
 			<nav class="navbar"><ul>
 
-				<li id="HomeTab" class="TabEl active" onclick="showpanel(this, 'Home')"><a href="#HomePage" id = "myid"> Home </a></li>
+				<li id="HomeTab" class="TabEl active" onclick="showpanel(this, 'Home')"><a href="#HomePage" id = "myid"> Home
+				</a></li>
 				<li id="BrowseTab" class="TabEl" onclick="showpanel(this, 'Browse')"> <a href="#Browse"> Browse </a></li>
 				<li id="AccountTab" class="TabEl" onclick="showpanel(this, 'Account')"><a href="#Account"> Account </a></li>
 
@@ -82,7 +84,7 @@
 
 				<h3>New Post</h3>
 				<div class = "postArea">
-					<textarea type="text" id="postText" class="postSettings" placeholder="Post something on your wall!" ></textarea>
+					<textarea type="text" id="postText" class="postSettings" placeholder="Post something on your wall!" ondrop="ondrop(event)" ondragover="allowDrop(event)"></textarea>
 					<input id ="postButton" type="submit" name="postContent" value="Post" onclick="postOnWall('postText','postsDiv', 'me')">
 				</div>
 				<div id="post_error"></div>
@@ -129,7 +131,7 @@
 
 				<h3>New Post</h3>
 				<div class= "postArea">
-					<textarea type="text" id="B_Text" class="postSettings" placeholder="Post something on the wall!" ></textarea>
+					<textarea type="text" id="B_Text" class="postSettings" placeholder="Post something on the wall!" ondrop="ondrop(event)" ondragover="allowDrop(event)"></textarea>
 					<input id ="postButton" type="submit" name="postContent" value="Post" onclick="postOnWall('B_Text','B_postsDiv', 'user')">
 				</div>
 

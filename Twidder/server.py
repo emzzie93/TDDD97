@@ -3,6 +3,8 @@
 
 
 import json
+import hashlib
+import hmac
 from gevent.wsgi import WSGIServer
 from geventwebsocket.handler import WebSocketHandler
 from flask import Flask, request
@@ -55,14 +57,15 @@ def sign_in():
 
     # check if user is logged in
     user_status = database_helper.get_logged_in_user(email)
-
+    print(len(user_status))
     # if user is logged in somewhere else and socket is active
-    if len(user_status) != 0 and user_status[0] in active_sockets:
-        message = "[sign_in] log_out"
+    if len(user_status) != 0:
         old_token = user_status[0]
-        active_sockets[old_token].send(message)
+        if user_status[0] in active_sockets:
+            message = "[sign_in] log_out"
+            active_sockets[old_token].send(message)
+            del active_sockets[old_token]
         database_helper.remove_logged_in_user(old_token)
-        del active_sockets[old_token]
 
     # generate token
     token = str(uuid.uuid4().get_hex())
@@ -125,9 +128,8 @@ def sign_up():
 def sign_out():
     # get token and check if logged in
     token = request.json['token']
-    logged_in = database_helper.find_logged_in_user(token)
-    if len(logged_in) != 0:
-        # delete token from logged in users
+    user = database_helper.find_logged_in_user(token)
+    if len(user) != 0:
         database_helper.remove_logged_in_user(token)
         check = database_helper.find_logged_in_user(token)
         # if no longer logged in but still active socket
@@ -152,21 +154,36 @@ def sign_out():
 @app.route("/change_password", methods=['POST'])
 def change_password():
     # retrieve all the variables
-    token = request.json['token']
+    authentication_client = request.json['authentication']
     old_password = request.json['old_password']
     new_password = request.json['new_password']
+    user_email = request.json['email']
 
-    user_email = database_helper.find_logged_in_user(token)
+    token = database_helper.get_logged_in_user(user_email)[0]
     # check if user is logged in
-    if not user_email:
+    if not token:
         returnmsg = {
             'success': False,
             'message': "User not logged in",
             'data': '-'}
         return json.dumps(returnmsg)
 
-    # check if correct password by getting the old hashed password
-    # and cheking against the given password.
+    # Authenticate the user using the token stored in the database.
+    # If the authentication message from the user is the same as generated
+    # by the hmac function at server side the user is valid.
+
+    authentication_server = hmac.new(str(token), old_password + new_password, hashlib.sha256).hexdigest()
+
+    if authentication_server != authentication_client:
+        returnmsg = {
+            'success': False,
+            'message': "Invalid user",
+            'data': '-'}
+        return returnmsg
+
+    # if the user is valid,
+    # check if the old password is correct by getting the old hashed password
+    # and cheking against the old password.
     old_hash = database_helper.get_password(user_email)[0][0]
     correct_pw = check_password_hash(old_hash, old_password)
 
@@ -177,11 +194,10 @@ def change_password():
             'data': '-'}
         return json.dumps(returnmsg, indent=4)
 
-    # user logged in and entered the correct password!
-    new_password = generate_password_hash(new_password)
-
-    database_helper.set_password(user_email, old_password, new_password)
-    if not database_helper.get_user(user_email, new_password):
+    # user logged in and entered the correct password! Change password in database
+    new_hash = generate_password_hash(new_password)
+    database_helper.set_password(user_email, old_password, new_hash)
+    if database_helper.get_user(user_email, new_hash) is not None:
         returnmsg = {
             'success': True,
             'message': "Password changed.",
@@ -224,20 +240,35 @@ def get_user_data_by_token(token):
     return json.dumps(returnmsg)
 
 
-@app.route("/get_user_data_by_email/<token>/<email>", methods=['GET'])
-def get_user_data_by_email(token, email):
+@app.route("/get_user_data_by_email/<auth_msg>/<auth_email>/<email>", methods=['GET'])
+def get_user_data_by_email(auth_msg, auth_email, email):
     # make sure current user is logged in...
-    requester = database_helper.find_logged_in_user(token)
+    # requester = database_helper.find_logged_in_user(token)
 
-    if not requester:
+    print(email)
+    print(auth_msg)
+
+    token = database_helper.get_logged_in_user(auth_email)
+
+    if not token:
         returnmsg = {
             'success': False,
             'message': "You are not signed in.",
             'data': '-'}
         return json.dumps(returnmsg)
-    # user is logged in, retrieve requested info
+
+    # authenticate user
+    server_check = hmac.new(str(token[0]), email, hashlib.sha256).hexdigest()
+    print(server_check)
+    if server_check != auth_msg:
+        returnmsg = {
+            'success': False,
+            'message': "Invalid user.",
+            'data': '-'}
+        return json.dumps(returnmsg)
+    # valid user is logged in, retrieve requested info
     info = database_helper.get_userinfo(email)
-    if info is None:
+    if len(info) == 0:
         # requested user does not exist...
         returnmsg = {
             'success': False,
@@ -272,16 +303,28 @@ def get_user_messages_by_token(token):
     return json.dumps(returnmsg)
 
 
-@app.route("/get_user_messages_by_email/<token>/<email>", methods=['GET'])
-def get_user_messages_by_email(token, email):
+@app.route("/get_user_messages_by_email/<auth_msg>/<auth_email>/<email>", methods=['GET'])
+def get_user_messages_by_email(auth_msg, auth_email, email):
     # current user is logged in
-    My_email = database_helper.find_logged_in_user(token)
-    if not My_email:
+
+    token = database_helper.get_logged_in_user(auth_email)
+    # my_email = database_helper.find_logged_in_user(token)
+    if not token:
         returnmsg = {
             'success': False,
             'message': "You are not signed in",
             'data': '-'}
         return json.dumps(returnmsg)
+
+    # authenticate user
+    server_check = hmac.new(str(token[0]), email, hashlib.sha256).hexdigest()
+    if server_check != auth_msg:
+        returnmsg = {
+            'success': False,
+            'message': "Invalid user",
+            'data': '-'}
+        return json.dumps(returnmsg)
+
     # check if user exists
     user = database_helper.get_userinfo(email)
     if not user:
@@ -300,18 +343,30 @@ def get_user_messages_by_email(token, email):
 
 @app.route("/post_message", methods=['POST'])
 def post_message():
-    token = request.json['token']
-    # check if current user is logged in
-    from_email = database_helper.find_logged_in_user(token)
-    if not from_email:
+    # Request information
+    auth_email = request.json['email']
+    auth_client = request.json['authentication']
+    message = request.json['message']
+    to_email = request.json['to_email']
+
+    # check if user given is logged in.
+    token = database_helper.get_logged_in_user(auth_email)
+    if not token:
         returnmsg = {
             'success': False,
             'message': "You are not signed in",
             'data': '-'}
         return json.dumps(returnmsg, indent=4)
-    # retrieve the rest of the information
-    message = request.json['message']
-    to_email = request.json['to_email']
+
+    # check if correct user
+    auth_server = hmac.new(str(token[0]), to_email + message, hashlib.sha256).hexdigest()
+    if auth_server != auth_client:
+        returnmsg = {
+            'success': False,
+            'message': "Invalid user!",
+            'data': '-'}
+        return json.dumps(returnmsg)
+
     to_usr = database_helper.get_userinfo(to_email)
     # does the "post to" user exist?
     if len(to_usr) is None:
@@ -321,7 +376,7 @@ def post_message():
             'data': '-'}
         return json.dumps(returnmsg)
     # get current users email and post the message
-    database_helper.add_message(from_email, to_email, message)
+    database_helper.add_message(auth_email, to_email, message)
     returnmsg = {
         'success': True,
         'message': "Message posted",
@@ -346,7 +401,7 @@ def init_socket():
             if message is None:
                 if token in active_sockets:
                     del active_sockets[token]
-                print("!!---------closed socket: " + email +" -----------!!")
+                print("!!---------closed socket: " + email + " -----------!!")
                 break
             wsoc.send(message)
         return ''
