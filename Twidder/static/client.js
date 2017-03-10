@@ -407,17 +407,22 @@ logout = function(){
 
 /*    Browse     */
 
+/* function ondrop(event)
+ * this function takes the event and checks if the droptarget is a textarea
+ * if so then the daggable text is added tp the textbox.
+ */
 ondrop = function (event) {
 	event.preventDefault();
 	if(event.target.className == 'postSettings') {
         var data = event.dataTransfer.getData("Text");
-        console.log(data);
         var postText = document.getElementById(data).lastChild.innerHTML;
         event.target.value = postText;
 
     }
 };
 
+// this function prevents the default event to make sure that the wanted function can be executed without
+// interference.
 allowDrop = function (event) {
 	event.preventDefault()
 };
@@ -471,11 +476,15 @@ post = function(text, author, wall){
 	Header.innerHTML = author + ":";
 	Header.style.textAlign = "left";
 	NewPost.className = "post";
+	//adds an id to each post in order to be able to extract the correct text being dragged.
 	NewPost.id = "postNr" + numOfPosts;
 	numOfPosts = numOfPosts + 1;
 	MyText.innerHTML = text;
 	MyText.style.textAlign = "left";
 
+	/* The ondragstart function adds the id of the post to the dataTransfer variable
+	 * making it possible for the droptarget to extract the text from this specific post
+	 */
 	NewPost.ondragstart = function(){
 		console.log("dragstart: " + event.target.id);
 		event.dataTransfer.setData("Text", event.target.id);
