@@ -219,7 +219,7 @@ addinfo = function(usr){
 	var msgreq = new XMLHttpRequest();
 
 	if(usr === "me"){
-	//user info
+	//user info should be added without email?
 
 		var hashed_message = hash_message(my_email);
 		req.open("GET", '/get_user_data_by_email/' + hashed_message + '/' + my_email + '/' + my_email, true);

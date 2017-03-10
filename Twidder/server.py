@@ -210,6 +210,7 @@ def change_password():
         return json.dumps(returnmsg)
 
 
+# is this needed if token is to be kept secure?
 @app.route("/get_user_data_by_token/<token>", methods=['GET'])
 def get_user_data_by_token(token):
 
