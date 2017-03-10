@@ -2,14 +2,14 @@ var currUserPage = "me";
 var user = "me";
 var addinfoview = false;
 var view = "not set";
-var my_email = "emma@soder.se";
+var my_email = "not set";
 var error = false;
 var numOfPosts = 0;
 
 /* View functions */
 
 displayView = function(){
-
+// hämta data igen
 
 	if("myToken" in localStorage) {
 
@@ -151,11 +151,7 @@ pwcheck = function(){
 SocketConn = function (email, token) {
 
 	var socket = new WebSocket("ws://127.0.0.1:5000/init_socket");
-/*
-	socket.onerror = function () {
-            console.log("error message!");
-            logout();
-    };*/
+
 
 	socket.onopen = function (ev) {
 		console.log("open!");
@@ -232,7 +228,6 @@ addinfo = function(usr){
 			if(req.readyState == 4 && req.status == 200){
 
 				var rec_info = JSON.parse(req.responseText);
-				console.log("message: " + rec_info.message);
 				if (rec_info.success) {
                     var infoArr = rec_info.data;
                     document.getElementById("usercontent").innerHTML = infoArr.email + "<br>" + infoArr.firstname + "<br>" + infoArr.familyname + "<br>" + infoArr.gender + "<br>" + infoArr.city + "<br>" + infoArr.country;
@@ -257,7 +252,6 @@ addinfo = function(usr){
                     if (myPosts != null) {
                         for (var i = 0; i < myPosts.length; i++) {
                             post(myPosts[i].content, myPosts[i].writer, "postsDiv")
-                            console.log(myPosts[i].content);
                         }
                     }
 
@@ -272,7 +266,6 @@ addinfo = function(usr){
 	else {
 
         user = usr;
-        console.log("user: " + user);
         var hashed_message = hash_message(usr);
         //var req = new XMLHttpRequest();
         req.open("GET", '/get_user_data_by_email/' + hashed_message + '/' + my_email + '/' + usr, true);
@@ -486,9 +479,7 @@ post = function(text, author, wall){
 	 * making it possible for the droptarget to extract the text from this specific post
 	 */
 	NewPost.ondragstart = function(){
-		console.log("dragstart: " + event.target.id);
-		event.dataTransfer.setData("Text", event.target.id);
-		console.log(event.dataTransfer.getData("Text"))
+		event.dataTransfer.setData("Text", event.target.id)
 
 	};
 
@@ -557,7 +548,6 @@ loadUser = function(){
 	document.getElementById("browsedContent").style.display = "none";
 	document.getElementById("B_usrContentDiv").style.display = "none";
 	addinfo(usr);
-	console.log("load user error: " + error);
 	if(!error) {
 		document.getElementById("browsedContent").style.display = "block";
         document.getElementById("B_usrContentDiv").style.display = "block";

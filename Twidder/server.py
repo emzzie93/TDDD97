@@ -57,7 +57,6 @@ def sign_in():
 
     # check if user is logged in
     user_status = database_helper.get_logged_in_user(email)
-    print(len(user_status))
     # if user is logged in somewhere else and socket is active
     if len(user_status) != 0:
         old_token = user_status[0]
@@ -245,9 +244,6 @@ def get_user_data_by_email(auth_msg, auth_email, email):
     # make sure current user is logged in...
     # requester = database_helper.find_logged_in_user(token)
 
-    print(email)
-    print(auth_msg)
-
     token = database_helper.get_logged_in_user(auth_email)
 
     if not token:
@@ -259,7 +255,6 @@ def get_user_data_by_email(auth_msg, auth_email, email):
 
     # authenticate user
     server_check = hmac.new(str(token[0]), email, hashlib.sha256).hexdigest()
-    print(server_check)
     if server_check != auth_msg:
         returnmsg = {
             'success': False,
